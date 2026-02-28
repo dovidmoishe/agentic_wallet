@@ -16,14 +16,14 @@ export class Agent {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ type: 'text', unique: true })
-  public_key: string;
+  @Column({ type: 'text', unique: true, nullable: true })
+  public_key: string | null;
 
-  @Column({ type: 'jsonb' })
-  encrypted_private_key: EncryptedData;
+  @Column({ type: 'jsonb', nullable: true })
+  encrypted_private_key: EncryptedData | null;
 
-  @Column({ type: 'jsonb' })
-  encrypted_agent_key: EncryptedData;
+  @Column({ type: 'jsonb', nullable: true })
+  encrypted_agent_key: EncryptedData | null;
 
   @CreateDateColumn({ type: 'timestamp' })
   created_at: Date;

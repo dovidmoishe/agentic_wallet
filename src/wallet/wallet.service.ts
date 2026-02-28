@@ -3,21 +3,26 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Connection, Keypair, PublicKey, Transaction } from '@solana/web3.js';
 import { randomBytes } from 'crypto';
-import { CryptoService } from './crypto.service';
-import { Agent } from '../agent/entities/agent.entity';
+import { CryptoService } from './crypto.service.js';
+import { Agent } from '../agent/entities/agent.entity.js';
 
 @Injectable()
 export class WalletService {
-  private connection: Connection;
+  private connection: Connection | null = null;
 
   constructor(
     private readonly cryptoService: CryptoService,
     @InjectRepository(Agent)
     private readonly agentRepository: Repository<Agent>,
-  ) {
-    this.connection = new Connection(
-      process.env.SOLANA_RPC_URL || 'https://api.mainnet-beta.solana.com',
-    );
+  ) {}
+
+  private getConnection(): Connection {
+    if (!this.connection) {
+      this.connection = new Connection(
+        process.env.SOLANA_RPC || 'https://api.mainnet-beta.solana.com',
+      );
+    }
+    return this.connection;
   }
 
   createWallet() {
@@ -52,8 +57,8 @@ export class WalletService {
       throw new Error('Agent not found');
     }
 
-    const publicKey = new PublicKey(agent.public_key);
-    const balance = await this.connection.getBalance(publicKey);
+    const publicKey = new PublicKey(agent.public_key!);
+    const balance = await this.getConnection().getBalance(publicKey);
     return balance;
   }
 
@@ -64,21 +69,22 @@ export class WalletService {
     }
 
     const masterKey = Buffer.from(process.env.MASTER_KEY || '', 'hex');
-    const aekHex = this.cryptoService.decrypt(agent.encrypted_agent_key, masterKey);
+    const aekHex = this.cryptoService.decrypt(agent.encrypted_agent_key!, masterKey);
     const aek = Buffer.from(aekHex, 'hex');
 
-    const privateKeyHex = this.cryptoService.decrypt(agent.encrypted_private_key, aek);
+    const privateKeyHex = this.cryptoService.decrypt(agent.encrypted_private_key!, aek);
     const privateKey = Buffer.from(privateKeyHex, 'hex');
 
     const keypair = Keypair.fromSecretKey(privateKey);
 
-    const simulationResult = await this.connection.simulateTransaction(transaction);
+    const connection = this.getConnection();
+    const simulationResult = await connection.simulateTransaction(transaction);
     if (simulationResult.value.err) {
       throw new Error(`Simulation failed: ${JSON.stringify(simulationResult.value.err)}`);
     }
 
     transaction.sign(keypair);
-    const signature = await this.connection.sendRawTransaction(transaction.serialize());
+    const signature = await connection.sendRawTransaction(transaction.serialize());
 
     return { signature };
   }
