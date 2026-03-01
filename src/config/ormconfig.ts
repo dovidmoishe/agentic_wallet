@@ -11,4 +11,8 @@ export const AppDataSource = new DataSource({
   migrations: ['src/migrations/**/*.ts'],
   subscribers: [],
   ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : false,
+  connectTimeoutMS: 30000,
+  statementTimeoutMS: 30000,
+  retryAttempts: 3,
+  retryDelay: 3000,
 });
