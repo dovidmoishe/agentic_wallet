@@ -299,8 +299,10 @@ export class ClaudeAgentService {
     })) {
       if (message.type === 'result') {
         messages.push(JSON.stringify(message));
-      } else if (message.type === 'text') {
-        messages.push(message.text);
+      } else if ((message as any).content) {
+        messages.push(JSON.stringify((message as any).content));
+      } else {
+        messages.push(JSON.stringify(message));
       }
     }
 

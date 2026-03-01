@@ -21,7 +21,6 @@
     "noImplicitAny": false,
     "strictBindCallApply": false,
     "noFallthroughCasesInSwitch": false,
-    "jsx": "react",
-    "jsxImportSource": "react"
+    "jsx": "react-jsx"
   }
 }

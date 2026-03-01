@@ -1,0 +1,4 @@
+Create an agent with 5 SOL max spend
+Create wallet
+Get balance
+Get wallet address
