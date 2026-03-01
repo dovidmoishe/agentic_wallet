@@ -1,9 +1,9 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { Agent } from './entities/agent.entity';
-import { AgentService } from './agent.service';
-import { ClaudeAgentService } from './claude-agent.service';
-import { WalletModule } from '../wallet/wallet.module';
+import { Agent } from './entities/agent.entity.js';
+import { AgentService } from './agent.service.js';
+import { ClaudeAgentService } from './claude-agent.service.js';
+import { WalletModule } from '../wallet/wallet.module.js';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Agent]), WalletModule],

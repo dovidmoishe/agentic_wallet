@@ -1,12 +1,12 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
-import { WalletModule } from './wallet/wallet.module';
-import { AgentModule } from './agent/agent.module';
-import databaseConfig from './config/database.config';
-import { Agent } from './agent/entities/agent.entity';
+import { AppController } from './app.controller.js';
+import { AppService } from './app.service.js';
+import { WalletModule } from './wallet/wallet.module.js';
+import { AgentModule } from './agent/agent.module.js';
+import databaseConfig from './config/database.config.js';
+import { Agent } from './agent/entities/agent.entity.js';
 
 @Module({
   imports: [

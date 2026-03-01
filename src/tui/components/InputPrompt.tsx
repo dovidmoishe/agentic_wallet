@@ -25,8 +25,6 @@ export default function InputPrompt({ onSubmit, isLoading }: InputPromptProps) {
         onChange={setInput}
         onSubmit={handleSubmit}
         placeholder={isLoading ? 'Processing...' : 'Type a message...'}
-        isDisabled={isLoading}
-        focus={!isLoading}
       />
     </Box>
   );
