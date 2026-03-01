@@ -12,7 +12,6 @@ export default registerAs('database', () => {
       .replace(/\?$/, '');
   }
   return {
-    type: 'postgres',
     url,
     ssl: needsSsl ? { rejectUnauthorized: false } : false,
     synchronize: process.env.DB_SYNC === 'true',
@@ -20,5 +19,7 @@ export default registerAs('database', () => {
     connectTimeoutMS: 30000,
     statementTimeoutMS: 30000,
     acquireConnectionTimeout: 30000,
+    retryAttempts: 5,
+    retryDelay: 2000,
   };
 });
