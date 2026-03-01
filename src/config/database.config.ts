@@ -17,6 +17,8 @@ export default registerAs('database', () => {
     ssl: needsSsl ? { rejectUnauthorized: false } : false,
     synchronize: process.env.DB_SYNC === 'true',
     logging: process.env.DB_LOGGING === 'true',
-    connectTimeoutMS: 15000,
+    connectTimeoutMS: 30000,
+    statementTimeoutMS: 30000,
+    acquireConnectionTimeout: 30000,
   };
 });
