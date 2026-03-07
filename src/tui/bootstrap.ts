@@ -11,7 +11,6 @@ export async function bootstrapServices() {
     
     const app = await NestFactory.createApplicationContext(AppModule, {
       logger: ['error', 'warn'],
-      requestTimeout: 30000,
     });
     
     process.stdout.write('Connected to database!\n');

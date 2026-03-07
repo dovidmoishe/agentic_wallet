@@ -1,6 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
 import {
   query,
   tool,
@@ -17,6 +15,7 @@ import {
   Connection,
 } from '@solana/web3.js';
 import { Agent } from './entities/agent.entity.js';
+import { JsonDbService } from '../database/json-db.service.js';
 
 @Injectable()
 export class ClaudeAgentService {
@@ -25,8 +24,7 @@ export class ClaudeAgentService {
   constructor(
     private readonly walletService: WalletService,
     private readonly agentService: AgentService,
-    @InjectRepository(Agent)
-    private readonly agentRepository: Repository<Agent>,
+    private readonly jsonDb: JsonDbService,
   ) {}
 
   private getConnection(): Connection {
@@ -174,7 +172,7 @@ export class ClaudeAgentService {
           },
           async (args) => {
             try {
-              const agent = await this.agentRepository.findOne({
+              const agent = await this.jsonDb.findOne({
                 where: { id: agentId },
               });
               if (!agent) {
@@ -243,7 +241,7 @@ export class ClaudeAgentService {
   async chat(agentId: string | undefined, userMessage: string) {
     let agent: Agent | null = null;
     if (agentId) {
-      agent = await this.agentRepository.findOne({ where: { id: agentId } });
+      agent = await this.jsonDb.findOne({ where: { id: agentId } });
     }
 
     const sessionId = agentId || 'no-agent';

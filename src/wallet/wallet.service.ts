@@ -1,10 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
 import { Connection, Keypair, PublicKey, Transaction } from '@solana/web3.js';
 import { randomBytes } from 'crypto';
 import { CryptoService } from './crypto.service.js';
-import { Agent } from '../agent/entities/agent.entity.js';
+import { JsonDbService } from '../database/json-db.service.js';
 
 @Injectable()
 export class WalletService {
@@ -12,8 +10,7 @@ export class WalletService {
 
   constructor(
     private readonly cryptoService: CryptoService,
-    @InjectRepository(Agent)
-    private readonly agentRepository: Repository<Agent>,
+    private readonly jsonDb: JsonDbService,
   ) {}
 
   private getConnection(): Connection {
@@ -44,7 +41,7 @@ export class WalletService {
   }
 
   async getWallet(agentId: string) {
-    const agent = await this.agentRepository.findOne({ where: { id: agentId } });
+    const agent = await this.jsonDb.findOne({ where: { id: agentId } });
     if (!agent) {
       throw new Error('Agent not found');
     }
@@ -52,7 +49,7 @@ export class WalletService {
   }
 
   async getBalance(agentId: string) {
-    const agent = await this.agentRepository.findOne({ where: { id: agentId } });
+    const agent = await this.jsonDb.findOne({ where: { id: agentId } });
     if (!agent) {
       throw new Error('Agent not found');
     }
@@ -63,7 +60,7 @@ export class WalletService {
   }
 
   async signAndSend(agentId: string, transaction: Transaction) {
-    const agent = await this.agentRepository.findOne({ where: { id: agentId } });
+    const agent = await this.jsonDb.findOne({ where: { id: agentId } });
     if (!agent) {
       throw new Error('Agent not found');
     }

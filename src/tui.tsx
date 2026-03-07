@@ -17,9 +17,6 @@ process.on('unhandledRejection', (reason) => {
 
 async function main() {
   process.stdout.write('TUI starting...\n');
-  if (process.stdin.isTTY && typeof process.stdin.setRawMode === 'function') {
-    process.stdin.setRawMode(true);
-  }
   
   let services;
   try {
@@ -32,23 +29,17 @@ async function main() {
   process.stdout.write('Rendering TUI...\n');
 
   try {
-    process.stdin.resume();
-    process.stdin.on('end', () => {
-      console.error('STDIN ended');
-    });
-    process.stdin.on('close', () => {
-      console.error('STDIN closed');
-    });
-    process.on('SIGINT', () => {
-      console.error('SIGINT received');
-    });
     const { waitUntilExit } = render(
       <App
         claudeAgentService={claudeAgentService}
         agentService={agentService}
         walletService={walletService}
       />,
-      { exitOnCtrlC: false },
+      {
+        stdin: process.stdin,
+        stdout: process.stdout,
+        stderr: process.stderr,
+      },
     );
     await waitUntilExit();
     await app.close();

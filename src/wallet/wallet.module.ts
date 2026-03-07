@@ -1,11 +1,10 @@
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
 import { WalletService } from './wallet.service.js';
 import { CryptoService } from './crypto.service.js';
-import { Agent } from '../agent/entities/agent.entity.js';
+import { DatabaseModule } from '../database/database.module.js';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Agent])],
+  imports: [DatabaseModule],
   providers: [WalletService, CryptoService],
   exports: [WalletService, CryptoService],
 })

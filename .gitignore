@@ -45,6 +45,9 @@ lerna-debug.log*
 # Agent config (local agent ID)
 .agent-config.json
 
+# JSON DB storage
+data/
+
 # temp directory
 .temp
 .tmp

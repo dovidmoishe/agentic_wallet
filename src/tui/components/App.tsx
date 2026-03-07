@@ -69,7 +69,7 @@ export default function App({
     loadAgent().catch((error) => {
       console.error('Fatal error in loadAgent:', error);
     });
-  }, [agentService]);
+  }, []);
 
   useEffect(() => {
     if (!agentId || !publicKey) return;
@@ -77,16 +77,17 @@ export default function App({
     const fetchBalance = async () => {
       try {
         const lamports = await walletService.getBalance(agentId);
-        setBalance(lamports / 1e9);
+        const next = lamports / 1e9;
+        setBalance((prev) => (prev === next ? prev : next));
       } catch (error) {
-        setBalance(null);
+        setBalance((prev) => (prev === null ? prev : null));
       }
     };
 
     fetchBalance();
     const interval = setInterval(fetchBalance, 5000);
     return () => clearInterval(interval);
-  }, [agentId, publicKey, walletService]);
+  }, [agentId, publicKey]);
 
   const handleSubmit = async (input: string) => {
     if (!input.trim()) return;
@@ -98,24 +99,25 @@ export default function App({
     try {
       const response = await claudeAgentService.chat(agentId, input);
 
+      const newAssistantMessages: Message[] = [];
       let newAgentIdFromResponse: string | null = null;
       for (const msg of response.messages) {
         try {
           const parsed = JSON.parse(msg);
           if (parsed.result) {
             const content = String(parsed.result);
-            setMessages((prev) => [
-              ...prev,
-              { role: 'assistant', content },
-            ]);
+            newAssistantMessages.push({ role: 'assistant', content });
             const match = content.match(/Agent ID:\s*([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/i);
             if (match) newAgentIdFromResponse = match[1];
           }
         } catch {
-          setMessages((prev) => [...prev, { role: 'assistant', content: msg }]);
+          newAssistantMessages.push({ role: 'assistant', content: msg });
           const match = String(msg).match(/Agent ID:\s*([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/i);
           if (match) newAgentIdFromResponse = match[1];
         }
+      }
+      if (newAssistantMessages.length > 0) {
+        setMessages((prev) => [...prev, ...newAssistantMessages]);
       }
       if (newAgentIdFromResponse) saveAgentConfig(newAgentIdFromResponse);
 
