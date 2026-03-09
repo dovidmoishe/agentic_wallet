@@ -34,7 +34,12 @@ export class JsonDbService {
   private load(): Agent[] {
     this.ensureDataFile();
     const raw = readFileSync(this.dataPath, 'utf-8');
-    const data: JsonDatabase = JSON.parse(raw || '{"agents":[]}');
+    let data: JsonDatabase;
+    try {
+      data = JSON.parse(raw || '{"agents":[]}');
+    } catch {
+      data = { agents: [] };
+    }
     return (data.agents || []).map((a) => ({
       ...a,
       created_at: new Date(a.created_at),

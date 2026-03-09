@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Text } from 'ink';
+import { Connection, PublicKey } from '@solana/web3.js';
 import LeftPanel from './LeftPanel.js';
 import RightPanel from './RightPanel.js';
 import InputPrompt from './InputPrompt.js';
-import { ClaudeAgentService } from '../../agent/claude-agent.service.js';
-import { AgentService } from '../../agent/agent.service.js';
-import { WalletService } from '../../wallet/wallet.service.js';
+import { GeminiAgentService, getApp } from '../../agent/gemini-agent.service.js';
+import { JsonDbService } from '../../database/json-db.service.js';
 import { loadAgentConfig, saveAgentConfig } from '../utils/agent-config.js';
 
 interface Message {
@@ -14,16 +14,10 @@ interface Message {
 }
 
 interface AppProps {
-  claudeAgentService: ClaudeAgentService;
-  agentService: AgentService;
-  walletService: WalletService;
+  geminiAgentService: GeminiAgentService;
 }
 
-export default function App({
-  claudeAgentService,
-  agentService,
-  walletService,
-}: AppProps) {
+export default function App({ geminiAgentService }: AppProps) {
   const [agentId, setAgentId] = useState<string | undefined>(undefined);
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -36,7 +30,8 @@ export default function App({
       const savedAgentId = loadAgentConfig();
       if (savedAgentId) {
         try {
-          const agent = await agentService.findOne(savedAgentId);
+          const jsonDb = getApp().get(JsonDbService);
+          const agent = await jsonDb.findOne({ where: { id: savedAgentId } });
           if (agent) {
             setAgentId(savedAgentId);
             setPublicKey(agent.public_key);
@@ -76,7 +71,11 @@ export default function App({
 
     const fetchBalance = async () => {
       try {
-        const lamports = await walletService.getBalance(agentId);
+        const jsonDb = getApp().get(JsonDbService);
+        const agent = await jsonDb.findOne({ where: { id: agentId } });
+        if (!agent?.public_key) return;
+        const connection = new Connection(process.env.SOLANA_RPC ?? 'https://api.devnet.solana.com');
+        const lamports = await connection.getBalance(new PublicKey(agent.public_key));
         const next = lamports / 1e9;
         setBalance((prev) => (prev === next ? prev : next));
       } catch (error) {
@@ -97,15 +96,22 @@ export default function App({
     setIsLoading(true);
 
     try {
-      const response = await claudeAgentService.chat(agentId, input);
+      const response = await geminiAgentService.chat(agentId, input, messages);
 
       const newAssistantMessages: Message[] = [];
       let newAgentIdFromResponse: string | null = null;
       for (const msg of response.messages) {
         try {
           const parsed = JSON.parse(msg);
+          let content: string | null = null;
           if (parsed.result) {
-            const content = String(parsed.result);
+            content = String(parsed.result);
+          } else if (Array.isArray(parsed.errors) && parsed.errors.length > 0) {
+            content = parsed.errors.join('\n');
+          } else if (Array.isArray(parsed) && parsed[0]?.text) {
+            content = parsed.map((b: { text?: string }) => b.text).filter(Boolean).join('');
+          }
+          if (content) {
             newAssistantMessages.push({ role: 'assistant', content });
             const match = content.match(/Agent ID:\s*([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/i);
             if (match) newAgentIdFromResponse = match[1];
@@ -125,14 +131,16 @@ export default function App({
         const newAgentId = newAgentIdFromResponse ?? loadAgentConfig();
         if (newAgentId) {
           setAgentId(newAgentId);
-          const agent = await agentService.findOne(newAgentId);
+          const jsonDb = getApp().get(JsonDbService);
+          const agent = await jsonDb.findOne({ where: { id: newAgentId } });
           if (agent) {
             setPublicKey(agent.public_key);
             setMaxSpend(agent.max_spend);
           }
         }
       } else {
-        const agent = await agentService.findOne(agentId);
+        const jsonDb = getApp().get(JsonDbService);
+        const agent = await jsonDb.findOne({ where: { id: agentId } });
         if (agent && agent.public_key && !publicKey) {
           setPublicKey(agent.public_key);
         }

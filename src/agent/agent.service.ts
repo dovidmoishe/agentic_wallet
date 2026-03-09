@@ -11,6 +11,9 @@ export class AgentService {
   ) {}
 
   async create(agentData: Partial<Agent>): Promise<Agent> {
+    if (!agentData.max_spend) {
+      throw new Error('max_spend is required');
+    }
     const agent = this.jsonDb.create(agentData);
     return this.jsonDb.save(agent);
   }

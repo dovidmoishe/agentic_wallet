@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import 'reflect-metadata';
 import React from 'react';
 import { render } from 'ink';
 import 'dotenv/config';
@@ -25,16 +26,12 @@ async function main() {
     fail('Bootstrap failed:', error);
   }
 
-  const { app, claudeAgentService, agentService, walletService } = services;
+  const { app, geminiAgentService } = services;
   process.stdout.write('Rendering TUI...\n');
 
   try {
     const { waitUntilExit } = render(
-      <App
-        claudeAgentService={claudeAgentService}
-        agentService={agentService}
-        walletService={walletService}
-      />,
+      <App geminiAgentService={geminiAgentService} />,
       {
         stdin: process.stdin,
         stdout: process.stdout,
